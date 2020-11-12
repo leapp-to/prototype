@@ -12,7 +12,7 @@ from leapp.reporting import (
     create_report_from_deprecation,
     create_report_from_error,
     _create_report_object,
-    Audience, Key, Title, Summary, Severity, RelatedResource
+    Audience, Key, Title, Summary, Severity, RelatedResource, Groups
 )
 
 
@@ -83,6 +83,13 @@ def test_add_to_dict_func_append():
     assert is_path_valid(data, path)
     assert_leaf_list(data, path, is_leaf_list)
     assert len(value_from_path(data, path)) == 2
+
+
+def test_report_groups():
+    assert Groups.INHIBITOR == "inhibitor"
+    assert Groups.REPOSITORY == "repository"
+    # make sure you can use a custom group in pressing need
+    assert Groups(["This is a new group", Groups.INHIBITOR]).value == ["This is a new group", "inhibitor"]
 
 
 def test_convert_from_error_to_report():

@@ -116,16 +116,42 @@ class Audience(BasePrimitive):
         self._value = value
 
 
-class Flags(BasePrimitive):
-    """Report flags"""
-    name = 'flags'
+class Groups(BasePrimitive):
+    """Report groups."""
+    name = 'groups'
 
     INHIBITOR = 'inhibitor'
     FAILURE = 'failure'
+    ACCESSIBILITY = 'accessibility'
+    AUTHENTICATION = 'authentication'
+    BOOT = 'boot'
+    COMMUNICATION = 'communication'
+    DESKTOP = 'desktop environment'
+    DRIVERS = 'drivers'
+    EMAIL = 'email'
+    ENCRYPTION = 'encryption'
+    FILESYSTEM = 'filesystem'
+    FIREWALL = 'firewall'
+    HIGH_AVAILABILITY = 'high availability'
+    KERNEL = 'kernel'
+    MONITORING = 'monitoring'
+    NETWORK = 'network'
+    OS_FACTS = 'OS facts'
+    PUBLIC_CLOUD = 'public cloud'
+    PYTHON = 'python'
+    REPOSITORY = 'repository'
+    RHUI = 'rhui'
+    SANITY = 'sanity'
+    SECURITY = 'security'
+    SELINUX = 'selinux'
+    SERVICES = 'services'
+    TIME_MANAGEMENT = 'time management'
+    TOOLS = 'tools'
+    UPGRADE_PROCESS = 'upgrade process'
 
     def __init__(self, value=None):
         if not isinstance(value, list):
-            raise TypeError('Value of "Flags" must be a list')
+            raise TypeError('Value of "Groups" must be a list')
         self._value = value
 
 
@@ -139,50 +165,6 @@ class Key(BasePrimitive):
             raise ValueError('Key value should be a string.')
 
         self._value = uuid
-
-
-class Tags(BasePrimitive):
-    """Report tags"""
-    name = 'tags'
-
-    class _Value(object):
-        def __init__(self, value):
-            self.value = value
-
-    ACCESSIBILITY = _Value('accessibility')
-    AUTHENTICATION = _Value('authentication')
-    BOOT = _Value('boot')
-    COMMUNICATION = _Value('communication')
-    DESKTOP = _Value('desktop environment')
-    DRIVERS = _Value('drivers')
-    EMAIL = _Value('email')
-    ENCRYPTION = _Value('encryption')
-    FILESYSTEM = _Value('filesystem')
-    FIREWALL = _Value('firewall')
-    HIGH_AVAILABILITY = _Value('high availability')
-    KERNEL = _Value('kernel')
-    MONITORING = _Value('monitoring')
-    NETWORK = _Value('network')
-    OS_FACTS = _Value('OS facts')
-    PUBLIC_CLOUD = _Value('public cloud')
-    PYTHON = _Value('python')
-    REPOSITORY = _Value('repository')
-    RHUI = _Value('rhui')
-    SANITY = _Value('sanity')
-    SECURITY = _Value('security')
-    SELINUX = _Value('selinux')
-    SERVICES = _Value('services')
-    TIME_MANAGEMENT = _Value('time management')
-    TOOLS = _Value('tools')
-    UPGRADE_PROCESS = _Value('upgrade process')
-
-    def __init__(self, value=None):
-        if not isinstance(value, list):
-            raise TypeError('Value of "Tags" must be a list')
-        if not all([isinstance(v, Tags._Value) for v in value]):
-            raise TypeError('Unsupported tag value passed for Report Tags.')
-        # after the objects validation we need the actual values in the list
-        self._value = [v.value for v in value]
 
 
 class ExternalLink(BaseListPrimitive):
