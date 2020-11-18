@@ -137,6 +137,7 @@ class Groups(BasePrimitive):
     MONITORING = 'monitoring'
     NETWORK = 'network'
     OS_FACTS = 'OS facts'
+    POST = 'post'
     PUBLIC_CLOUD = 'public cloud'
     PYTHON = 'python'
     REPOSITORY = 'repository'
