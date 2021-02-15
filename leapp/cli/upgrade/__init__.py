@@ -183,14 +183,6 @@ def process_whitelist_experimental(repositories, workflow, configuration, logger
             raise CommandError(msg)
 
 
-def process_report_schema(args, cfg):
-    default_report_schema = cfg.get('report', 'schema')
-    if args.report_schema and args.report_schema > default_report_schema:
-        raise CommandError('--report-schema version can not be greater that the '
-                           'actual {} one.'.format(default_report_schema))
-    return args.report_schema or default_report_schema
-
-
 @command('upgrade', help='Upgrade the current system to the next available major version.')
 @command_opt('resume', is_flag=True, help='Continue the last execution after it was stopped (e.g. after reboot)')
 @command_opt('reboot', is_flag=True, help='Automatically performs reboot when requested.')
@@ -201,7 +193,8 @@ def process_report_schema(args, cfg):
                                            ' with Red Hat Subscription Manager')
 @command_opt('enablerepo', action='append', metavar='<repoid>',
              help='Enable specified repository. Can be used multiple times.')
-@command_opt('report-schema', help='Specify report schema version for leapp-report.json', choices=['1.0.0', '1.1.0'])
+@command_opt('report-schema', help='Specify report schema version for leapp-report.json', choices=['1.0.0', '1.1.0'],
+             default=get_config().get('report', 'schema'))
 def upgrade(args):
     skip_phases_until = None
     context = str(uuid.uuid4())
@@ -210,7 +203,6 @@ def upgrade(args):
     configuration = prepare_configuration(args)
     answerfile_path = cfg.get('report', 'answerfile')
     userchoices_path = cfg.get('report', 'userchoices')
-    report_schema = process_report_schema(args, cfg)
     if os.getuid():
         raise CommandError('This command has to be run under the root user.')
 
@@ -253,7 +245,7 @@ def upgrade(args):
     workflow.save_answers(answerfile_path, userchoices_path)
     report_errors(workflow.errors)
     report_inhibitors(context)
-    generate_report_files(context, report_schema)
+    generate_report_files(context, args.report_schema)
     report_files = get_cfg_files('report', cfg)
     log_files = get_cfg_files('logs', cfg)
     report_info(report_files, log_files, answerfile_path, fail=workflow.failure)
@@ -270,7 +262,8 @@ def upgrade(args):
                                            ' with Red Hat Subscription Manager')
 @command_opt('enablerepo', action='append', metavar='<repoid>',
              help='Enable specified repository. Can be used multiple times.')
-@command_opt('report-schema', help='Specify report schema version for leapp-report.json', choices=['1.0.0', '1.1.0'])
+@command_opt('report-schema', help='Specify report schema version for leapp-report.json', choices=['1.0.0', '1.1.0'],
+             default=get_config().get('report', 'schema'))
 def preupgrade(args):
     context = str(uuid.uuid4())
     cfg = get_config()
@@ -279,7 +272,6 @@ def preupgrade(args):
     answerfile_path = cfg.get('report', 'answerfile')
     userchoices_path = cfg.get('report', 'userchoices')
 
-    report_schema = process_report_schema(args, cfg)
     if os.getuid():
         raise CommandError('This command has to be run under the root user.')
     e = Execution(context=context, kind='preupgrade', configuration=configuration)
@@ -303,7 +295,7 @@ def preupgrade(args):
 
     logger.info("Answerfile will be created at %s", answerfile_path)
     workflow.save_answers(answerfile_path, userchoices_path)
-    generate_report_files(context, report_schema)
+    generate_report_files(context, args.report_schema)
     report_errors(workflow.errors)
     report_inhibitors(context)
     report_files = get_cfg_files('report', cfg)
