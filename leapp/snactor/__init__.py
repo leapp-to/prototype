@@ -1,6 +1,10 @@
 import os
 import pkgutil
 import socket
+# for profilling
+import cProfile
+import pstats
+import six
 
 from leapp.utils.i18n import _  # noqa; pylint: disable=redefined-builtin
 from leapp.snactor import commands
@@ -73,6 +77,18 @@ def cli(args):
 
 
 def main():
+    os.environ['LEAPP_CPROFILE'] = os.environ.get('LEAPP_CPROFILE', '0')
+    profile_enabled = os.environ['LEAPP_CPROFILE'] == '1'
+    if profile_enabled:
+        pr = cProfile.Profile()
+        pr.enable()
     os.environ['LEAPP_HOSTNAME'] = socket.getfqdn()
     load_commands()
     cli.command.execute(version=_('snactor version {}').format(VERSION))
+    if profile_enabled:
+        pr.disable()
+        s = six.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print(s.getvalue())
