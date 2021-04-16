@@ -106,7 +106,7 @@ def check_env_and_conf(env_var, conf_var, configuration):
     return os.getenv(env_var, '0') == '1' or configuration.get(conf_var, '0') == '1'
 
 
-def generate_report_files(context):
+def generate_report_files(context, report_schema):
     """
     Generates all report files for specific leapp run (txt and json format)
     """
@@ -115,8 +115,8 @@ def generate_report_files(context):
                                             'leapp-report.{}'.format(f)) for f in ['txt', 'json']]
     # fetch all report messages as a list of dicts
     messages = fetch_upgrade_report_messages(context)
-    generate_report_file(messages, context, report_json)
-    generate_report_file(messages, context, report_txt)
+    generate_report_file(messages, context, report_json, report_schema)
+    generate_report_file(messages, context, report_txt, report_schema)
 
 
 def get_cfg_files(section, cfg, must_exist=True):
@@ -193,6 +193,8 @@ def process_whitelist_experimental(repositories, workflow, configuration, logger
                                            ' with Red Hat Subscription Manager')
 @command_opt('enablerepo', action='append', metavar='<repoid>',
              help='Enable specified repository. Can be used multiple times.')
+@command_opt('report-schema', help='Specify report schema version for leapp-report.json', choices=['1.0.0', '1.1.0'],
+             default=get_config().get('report', 'schema'))
 def upgrade(args):
     skip_phases_until = None
     context = str(uuid.uuid4())
@@ -201,7 +203,6 @@ def upgrade(args):
     configuration = prepare_configuration(args)
     answerfile_path = cfg.get('report', 'answerfile')
     userchoices_path = cfg.get('report', 'userchoices')
-
     if os.getuid():
         raise CommandError('This command has to be run under the root user.')
 
@@ -244,7 +245,7 @@ def upgrade(args):
     workflow.save_answers(answerfile_path, userchoices_path)
     report_errors(workflow.errors)
     report_inhibitors(context)
-    generate_report_files(context)
+    generate_report_files(context, args.report_schema)
     report_files = get_cfg_files('report', cfg)
     log_files = get_cfg_files('logs', cfg)
     report_info(report_files, log_files, answerfile_path, fail=workflow.failure)
@@ -261,6 +262,8 @@ def upgrade(args):
                                            ' with Red Hat Subscription Manager')
 @command_opt('enablerepo', action='append', metavar='<repoid>',
              help='Enable specified repository. Can be used multiple times.')
+@command_opt('report-schema', help='Specify report schema version for leapp-report.json', choices=['1.0.0', '1.1.0'],
+             default=get_config().get('report', 'schema'))
 def preupgrade(args):
     context = str(uuid.uuid4())
     cfg = get_config()
@@ -292,7 +295,7 @@ def preupgrade(args):
 
     logger.info("Answerfile will be created at %s", answerfile_path)
     workflow.save_answers(answerfile_path, userchoices_path)
-    generate_report_files(context)
+    generate_report_files(context, args.report_schema)
     report_errors(workflow.errors)
     report_inhibitors(context)
     report_files = get_cfg_files('report', cfg)
