@@ -1,0 +1,16 @@
+summary: leapp JATS tests
+execute:
+    how: tmt
+discover:
+    name: jats-leapp
+    how: jats
+    url: https://gitlab.cee.redhat.com/oamg/jats-leapp
+    filter: 'tier: api,static,sanity,cli,fw,jats-leapp'
+provision:
+    how: connect
+    guest: 10.0.79.250
+    key: ~/.ssh/baseosci_id_rsa
+
+prepare:
+    how: ansible
+    playbook: ./leapp-tmt-ansible/leapp_with_tests.yml
