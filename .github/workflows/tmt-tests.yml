@@ -1,0 +1,72 @@
+name: tmt-tests
+
+# Run this action on pull request against master branch.
+on:
+  pull_request:
+    branches:
+      - master
+
+# Its only job is to run a tmt-based tests on a Testing Farm service.
+jobs:
+  tmt:
+    runs-on: ubuntu-20.04
+    steps:
+      # This step schedules a tmt test. The test id is stored in `req_id` variable for a later use.
+      # TODO: The actual command that triggers a new test on TF service is commented out as it would fail, because
+      # there are no tmt plans ready in the repository.
+      - name: schedule a tmt test
+        id: sched_test
+        # Information about the repo/ref/sha from which the action was triggered is sent in the
+        # `environments.variables` field.
+
+        # All the discovered test plans from the repository specified in `tests.fmf.url` are run.
+        # It should be possible to specify which test plan to run as specified in `test.fmf.name`, however this is not
+        # working at this moment, see https://gitlab.com/testing-farm/general/-/issues/18
+        #
+        # At this moment repo/sha that triggered the action is used, i.e. all tests plans specified in THIS repository
+        # are run.
+
+        # TODO: The tests are run in `Fedora-33` compose, it should be possible to use `Fedora` symbolic name that
+        # should be translated to the latest stable Fedora but the job ends in 'error' state:
+        # "Guest couldn't be provisioned: Artemis resource ended in 'error' state"
+        run: |
+          #jq < $GITHUB_EVENT_PATH
+
+          cat << EOF > request.json
+          {
+            "api_key": "${{ secrets.TF_API_KEY }}",
+            "test": {"fmf": {"url": "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY", "ref": "$GITHUB_SHA"}},
+            "environments": [{
+              "arch": "x86_64",
+              "os": {"compose": "Fedora-33"},
+              "variables": {
+                "REPO": "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY",
+                "REF": "$GITHUB_REF",
+                "SHA": "$GITHUB_SHA"
+              }
+            }]
+          }
+          EOF
+
+          #curl ${{ secrets.TF_ENDPOINT }}/requests \
+          #  --data @request.json \
+          #  --header "Content-Type: application/json" \
+          #  --output response.json
+          echo '{"id": "fake-id"}' > response.json
+
+          echo "::set-output name=req_id::$(jq -r .id response.json)"
+
+      # This step adds a new comment to the pull request with a link to the test.
+      # TODO: This is a temporary workaround until a proper way to set a commit status is implemented.
+      - name: comment
+        id: comment
+        uses: actions/github-script@v4
+        with:
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Testing Farm [request](${{ secrets.TF_ENDPOINT }}/requests/${{ steps.sched_test.outputs.req_id }})' +
+                    ' for tmt test was created.'
+            })
