@@ -418,3 +418,14 @@ def list_runs(args):  # noqa; pylint: disable=unused-argument
                   file=sys.stdout)
     else:
         raise CommandError('No previous run found!')
+
+
+def register(base_command):
+    """
+        Registers all commands leapp upgrade commands
+    """
+    base_command.add_sub(answer)
+    base_command.add_sub(list_runs)
+    base_command.add_sub(preupgrade)
+    base_command.add_sub(rerun)
+    base_command.add_sub(upgrade)
